@@ -62,7 +62,7 @@ async fn index(State(s): State<ServerState>) -> Markup {
                         h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #444; }
                         .field { margin-bottom: 0.5rem; }
                         .label { font-weight: 600; }
-                        .mono { font-family: ui-monospace, monospace; font-size: 0.9em; }
+                        .mono { font-family: ui-monospace, monospace; font-size: 0.9em; overflow-wrap: break-word; }
                         .muted { color: #888; }
                         input[type="text"] {
                             width: 100%;
@@ -126,7 +126,7 @@ async fn index(State(s): State<ServerState>) -> Markup {
                     @if let Some(ref update) = persistent.last_update {
                         div.field {
                             span.label { "At: " }
-                            span.mono { (update.at.to_string()) }
+                            time.mono.local-time datetime=(update.at.to_string()) { (update.at.to_string()) }
                         }
                         div.field {
                             span.label { "Reason: " }
@@ -143,7 +143,8 @@ async fn index(State(s): State<ServerState>) -> Markup {
                     @if let Some(ref resp) = persistent.last_mam_response {
                         div.field {
                             span.label { "Last MAM response: " }
-                            span { (resp.http_status) " at " (resp.at.to_string()) }
+                            span { (resp.http_status) " at " }
+                            time.mono.local-time datetime=(resp.at.to_string()) { (resp.at.to_string()) }
                         }
                     }
                 }
@@ -191,6 +192,11 @@ async fn index(State(s): State<ServerState>) -> Markup {
                             } catch (e) {
                                 showResult('error', 'Request failed: ' + e.message);
                             }
+                        });
+
+                        document.querySelectorAll('.local-time').forEach(el => {
+                            const d = new Date(el.getAttribute('datetime'));
+                            if (!isNaN(d)) el.textContent = d.toLocaleString();
                         });
                     "))
                 }
