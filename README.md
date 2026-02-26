@@ -10,7 +10,7 @@ All configuration is via environment variables.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MOUSER_MAM_ID` | — | MAM session cookie (required for updates) |
+| `MOUSER_MAM_ID` | — | Initial MAM session cookie; seeds the state file on first run. To change it later, use the web UI or wipe the state file. |
 | `MOUSER_PORT` | `7878` | HTTP server port |
 | `MOUSER_STATE_FILE` | `/data/mouser/state.json` | Path to persistent state file |
 | `MOUSER_CHECK_INTERVAL` | `300` | Seconds between IP checks |
@@ -41,6 +41,30 @@ MOUSER_MAM_ID=your_mam_id MOUSER_STATE_FILE=/tmp/mouser.json cargo run
 ## Docker
 
 ```sh
-docker build -t mouser .
-docker run -e MOUSER_MAM_ID=your_mam_id -v mouser-data:/data/mouser mouser
+docker run -e MOUSER_MAM_ID=your_mam_id -v mouser-data:/data/mouser ghcr.io/christianjacobsen/mouser
+```
+
+### Compose with Gluetun
+
+```yaml
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    cap_add: [NET_ADMIN]
+    environment:
+      - VPN_SERVICE_PROVIDER=your_provider
+      - VPN_TYPE=wireguard
+    ports:
+      - 7878:7878
+
+  mouser:
+    image: ghcr.io/christianjacobsen/mouser:latest
+    network_mode: service:gluetun
+    environment:
+      - MOUSER_MAM_ID=your_mam_id
+    volumes:
+      - mouser-data:/data/mouser
+
+volumes:
+  mouser-data:
 ```
