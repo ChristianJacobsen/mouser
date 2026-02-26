@@ -18,10 +18,15 @@ All configuration is via environment variables.
 | `MOUSER_USER_AGENT` | `mouser/0.1.0` | User-Agent for MAM API requests |
 | `LOG_LEVEL` | `info` | Log level filter (`debug`, `info`, `warn`, `error`) |
 
+## Web UI
+
+A minimal web interface is served at the root path for managing cookies and triggering updates from a browser.
+
 ## API
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| `GET` | `/` | Web UI for cookie management and manual updates |
 | `GET` | `/health` | `200` if synced, `503` if stale/no cookie/last error |
 | `GET` | `/state` | Current persistent state as JSON |
 | `PUT` | `/state` | Update cookie: `{"cookie": "..."}` |
