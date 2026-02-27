@@ -44,5 +44,5 @@ fn default_stale_threshold() -> u64 {
 }
 
 fn default_user_agent() -> String {
-    "mouser/0.1.0".to_string()
+    format!("mouser/{}", env!("CARGO_PKG_VERSION"))
 }

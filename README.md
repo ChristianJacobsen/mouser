@@ -15,7 +15,7 @@ All configuration is via environment variables.
 | `MOUSER_STATE_FILE` | `/data/mouser/state.json` | Path to persistent state file |
 | `MOUSER_CHECK_INTERVAL` | `300` | Seconds between IP checks |
 | `MOUSER_STALE_THRESHOLD` | `86400` | Seconds before forcing a re-report |
-| `MOUSER_USER_AGENT` | `mouser/0.1.0` | User-Agent for MAM API requests |
+| `MOUSER_USER_AGENT` | `mouser/<version>` | User-Agent for MAM API requests |
 | `LOG_LEVEL` | `info` | Log level filter (`debug`, `info`, `warn`, `error`) |
 
 ## Web UI

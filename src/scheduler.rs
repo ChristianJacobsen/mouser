@@ -60,21 +60,8 @@ pub async fn run_tick(shared: &SharedState, client: &MamClient) {
         }
     };
 
-    // Check if IP or ASN actually changed compared to last successful response
-    let needs_mam_update = {
-        let state = shared.read().await;
-        match state
-            .persistent
-            .last_mam_response
-            .as_ref()
-            .and_then(|r| r.body.as_ref())
-        {
-            Some(prev) => prev.ip != ip.ip || prev.asn != ip.asn,
-            None => true,
-        }
-    };
-
-    let update_reason = if needs_mam_update {
+    // Refine the reason based on what specifically changed.
+    let update_reason = {
         let state = shared.read().await;
         let prev = state
             .persistent
@@ -86,43 +73,31 @@ pub async fn run_tick(shared: &SharedState, client: &MamClient) {
             Some(p) if p.asn != ip.asn => UpdateReason::AsnChanged,
             _ => reason,
         }
-    } else {
-        reason
     };
 
-    if needs_mam_update {
-        info!(ip = %ip.ip, asn = ip.asn, ?update_reason, "reporting to MAM");
+    // Always call MAM when should_update said so — even if the IP hasn't
+    // changed, the stale call keeps the session alive and accepts cookie
+    // rotation.
+    info!(ip = %ip.ip, asn = ip.asn, ?update_reason, "reporting to MAM");
 
-        match client.update_seedbox(&cookie).await {
-            Ok(mam_resp) => {
-                let mut state = shared.write().await;
-                if let Some(ref new_cookie) = mam_resp.cookie_received {
-                    state.persistent.cookie = Some(new_cookie.clone());
-                }
-                state.persistent.last_mam_response = Some(mam_resp);
-                state.persistent.last_update = Some(LastUpdate {
-                    at: OffsetDateTime::now_utc(),
-                    mam_updated: true,
-                    reason: update_reason,
-                });
-                if let Err(e) = state.save() {
-                    error!("failed to save state: {e}");
-                }
+    match client.update_seedbox(&cookie).await {
+        Ok(mam_resp) => {
+            let mut state = shared.write().await;
+            if let Some(ref new_cookie) = mam_resp.cookie_received {
+                state.persistent.cookie = Some(new_cookie.clone());
             }
-            Err(e) => {
-                error!("failed to update MAM: {e}");
+            state.persistent.last_mam_response = Some(mam_resp);
+            state.persistent.last_update = Some(LastUpdate {
+                at: OffsetDateTime::now_utc(),
+                mam_updated: true,
+                reason: update_reason,
+            });
+            if let Err(e) = state.save() {
+                error!("failed to save state: {e}");
             }
         }
-    } else {
-        info!(ip = %ip.ip, "IP unchanged, skipping MAM update");
-        let mut state = shared.write().await;
-        state.persistent.last_update = Some(LastUpdate {
-            at: OffsetDateTime::now_utc(),
-            mam_updated: false,
-            reason: update_reason,
-        });
-        if let Err(e) = state.save() {
-            error!("failed to save state: {e}");
+        Err(e) => {
+            error!("failed to update MAM: {e}");
         }
     }
 }
@@ -200,4 +175,5 @@ mod tests {
         let result = should_update(&state, 86400);
         assert!(result.is_none());
     }
+
 }
