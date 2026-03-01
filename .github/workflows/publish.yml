@@ -6,7 +6,7 @@ on:
     tags: ["v*"]
 
 env:
-  IMAGE: ghcr.io/${{ github.repository }}
+  IMAGE: ghcr.io/christianjacobsen/mouser
 
 jobs:
   check:
