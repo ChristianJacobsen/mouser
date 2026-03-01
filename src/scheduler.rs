@@ -175,5 +175,4 @@ mod tests {
         let result = should_update(&state, 86400);
         assert!(result.is_none());
     }
-
 }
