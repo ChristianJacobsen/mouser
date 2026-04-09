@@ -1,5 +1,5 @@
 FROM dhi.io/rust:1-alpine3.22-sfw-dev AS chef
-RUN apk add --no-cache tzdata=2025c-r0 \
+RUN apk add --no-cache tzdata=2026a-r0 \
     && cargo install cargo-chef --locked
 WORKDIR /build
 
