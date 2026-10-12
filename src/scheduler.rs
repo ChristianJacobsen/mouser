@@ -24,12 +24,10 @@ fn should_update(
         return Some(UpdateReason::PreviousHttpError);
     }
 
-    Some(UpdateReason::Stale).filter(|_| {
-        let age = (OffsetDateTime::now_utc() - resp.at)
-            .whole_seconds()
-            .unsigned_abs();
-        age >= stale_threshold
-    })
+    let age = (OffsetDateTime::now_utc() - resp.at)
+        .whole_seconds()
+        .unsigned_abs();
+    (age >= stale_threshold).then_some(UpdateReason::Stale)
 }
 
 pub async fn run_tick(shared: &SharedState, client: &MamClient) {
